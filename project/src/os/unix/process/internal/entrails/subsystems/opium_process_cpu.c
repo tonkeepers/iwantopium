@@ -5,21 +5,27 @@ static opium_process_base_t *base;
 static opium_s32_t init(void *context); 
 static opium_s32_t config_validate(); 
 static opium_s32_t config_apply(); 
+static opium_s32_t config_reset();
+static opium_s32_t metric_collect();
+static opium_s32_t metric_diff();
 
 static opium_s32_t set_affinity(pid_t pid, opium_cpuset_t *mask);
 static opium_s32_t set_policy(pid_t pid, opium_s32_t policy);
 static opium_s32_t set_nice(pid_t pid, opium_s32_t nice);
 
 static opium_process_cpu_config_t *getconfig(opium_process_base_t *base);
+static opium_process_cpu_metric_t *getmetric(opium_process_base_t *base);
 
-#define OPIUM_PROCESS_CPU_AFFINITY_DEFAULT 1
-#define OPIUM_PROCESS_CPU_POLICY_DEFAULT   1
-#define OPIUM_PROCESS_CPU_NICE_DEFAULT     0
+const opium_cpuset_t cpu_affinity_default[] = {0};
+const opium_s32_t    cpu_policy_default = SCHED_OTHER;
+const opium_s32_t    cpu_nice_default   = 0;
 
 opium_process_base_func_t cpu_handler = {
    .init            = init,
    .config_validate = config_validate,
-   .config_apply    = config_apply 
+   .config_apply    = config_apply,
+   .config_reset    = config_reset,
+   .metric_collect  = metric_collect
 };
 
 #pragma region global_segment 
@@ -55,6 +61,11 @@ opium_process_cpu_set_nice(opium_s32_t nice)
 static opium_process_cpu_config_t *getconfig(opium_process_base_t *base)
 {
    return (opium_process_cpu_config_t *)(opium_process_base_get_config(base));
+}
+
+static opium_process_cpu_metric_t *getmetric(opium_process_base_t *base)
+{
+   return (opium_process_cpu_metric_t *)(opium_process_base_get_metric(base));
 }
 
 #pragma endregion
@@ -153,6 +164,28 @@ static opium_s32_t config_apply()
    if (resultn != OPIUM_RET_OK) {
 
    }
+
+   return OPIUM_RET_OK;
+}
+
+static opium_s32_t config_reset()
+{
+   opium_process_cpu_config_t *conf = getconfig(base); 
+  
+   opium_cpuset_t affinity = *cpu_affinity_default;
+   CPU_ZERO(&affinity);
+   CPU_SET(0, &affinity);
+
+   conf->affinity = affinity;
+   conf->policy   = cpu_policy_default;
+   conf->nice     = cpu_nice_default;
+
+   return OPIUM_RET_OK;
+}
+
+static opium_s32_t metric_collect()
+{
+
 
    return OPIUM_RET_OK;
 }
