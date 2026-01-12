@@ -46,4 +46,37 @@
  * Together, these components form a modular internal control system where
  * each subsystem remains simple, focused, and replaceable — yet all speak
  * a shared architectural language.
+ *
  */
+
+   opium_s32_t
+opium_entrails_init(opium_process_entrails_t *entrails, opium_log_t *log)
+{
+   opium_s32_t resultn;
+
+   size_t cs;
+   size_t ms;
+
+   cs = sizeof(opium_process_cpu_config_t);
+   ms = sizeof(opium_process_cpu_metric_t);
+
+   resultn = opium_process_base_create(&entrails->cpu, cs, ms, log);
+   if (resultn != OPIUM_RET_OK) {
+      opium_log_err(log, "Failed to allocate cpu base! Config size: %zu, Metric size: %zu\n", cs, ms);
+      return OPIUM_RET_ERR;
+   }
+
+   opium_process_base_handler_t *handler = opium_process_base_handler(&entrails->cpu);
+
+   handler->init(&entrails->cpu);
+
+   opium_u64_t mask[] = {0, 3};
+   size_t size = sizeof(mask) - sizeof(mask[0]);
+   opium_process_cpu_set_affinity(mask, size);
+
+   handler->config_apply();
+
+   entrails->log = log;
+
+   return OPIUM_RET_OK;
+}

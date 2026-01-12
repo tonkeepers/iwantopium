@@ -10,7 +10,7 @@ opium_channel_init(opium_channel_t *channel, opium_log_t *log)
 
    if (socketpair(AF_UNIX, SOCK_STREAM, 0, pipe) == -1) {
       opium_log_err(log, "socketpair() failed\n");
-      return OPIUM_INVALID_PID;
+      return OPIUM_RET_ERR;
    }
 
    if (opium_nonblocking(pipe[0]) == -1) {

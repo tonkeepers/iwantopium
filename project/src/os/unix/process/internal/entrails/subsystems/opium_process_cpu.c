@@ -20,7 +20,7 @@ const opium_cpuset_t cpu_affinity_default[] = {0};
 const opium_s32_t    cpu_policy_default = SCHED_OTHER;
 const opium_s32_t    cpu_nice_default   = 0;
 
-opium_process_base_func_t cpu_handler = {
+opium_process_base_handler_t cpu_handler = {
    .init            = init,
    .config_validate = config_validate,
    .config_apply    = config_apply,
@@ -185,7 +185,25 @@ static opium_s32_t config_reset()
 
 static opium_s32_t metric_collect()
 {
+   opium_process_cpu_metric_t *metric = getmetric(base);
 
+   char *path = "/proc/self/stat";
+   FILE *stat = fopen(path, "r"); 
+   if (!stat) {
+      opium_log_err(base->log, "Failed to open file: %s\n", path);
+      return OPIUM_RET_ERR;
+   }
+
+   opium_u64_t utime = 0;
+   opium_u64_t stime = 0;
+
+   for (size_t index = 0; index < 13; index++) {
+      fscanf(stat, "%*s");
+   }
+
+   fscanf(stat, "%lu %lu", &utime, &stime);
+
+   opium_log_debug(base->log, "utime: %lu, stime: %lu\n", utime, stime);
 
    return OPIUM_RET_OK;
 }

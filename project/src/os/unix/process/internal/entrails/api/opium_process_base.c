@@ -1,7 +1,7 @@
 #include "core/opium_core.h"
 
-   opium_process_base_t * 
-opium_process_base_create(opium_slab_t *slab, char *name, size_t cs, size_t ms, opium_log_t *log)
+   opium_s32_t 
+opium_process_base_create(opium_process_base_t *base, size_t cs, size_t ms, opium_log_t *log)
 {
    void *resultp[2];
 
@@ -17,16 +17,6 @@ opium_process_base_create(opium_slab_t *slab, char *name, size_t cs, size_t ms, 
       goto free_ptr0;
    }
 
-   opium_process_base_t *base = opium_slab_alloc(slab); 
-   if (opium_unlikely(!base)) {
-      opium_log_err(log, "Failed to allocate base. Size: %zu\n", sizeof(opium_process_base_t));
-      goto free_ptr1;
-   }
-
-   base->slab        = slab;
-
-   base->name        = name;
-
    base->enabled     = false;
    base->initialized = false;
 
@@ -38,14 +28,12 @@ opium_process_base_create(opium_slab_t *slab, char *name, size_t cs, size_t ms, 
 
    base->log         = log;
 
-   return base;
+   return OPIUM_RET_OK;
 
-free_ptr1:
-   opium_free(resultp[1], log);
 free_ptr0:
    opium_free(resultp[0], log);
 err:
-   return NULL;
+   return OPIUM_RET_ERR;
 }
 
    void 
@@ -63,9 +51,9 @@ opium_process_base_exit(opium_process_base_t *base)
 }
 
    void 
-opium_process_base_bind(opium_process_base_t *base, opium_process_base_func_t *func)
+opium_process_base_bind(opium_process_base_t *base, opium_process_base_handler_t *handler)
 {
-   base->func = *func;
+   base->handler = *handler;
 }
 
 
@@ -73,7 +61,7 @@ opium_process_base_bind(opium_process_base_t *base, opium_process_base_func_t *f
 opium_process_base_enable(opium_process_base_t *base)
 {
    if (opium_likely(!base->initialized && !base->enabled)) {
-      base->func.init(base);
+      base->handler.init(base);
       base->initialized = true;
    }
 
@@ -87,24 +75,24 @@ opium_process_base_config_apply(opium_process_base_t *base)
 {
    opium_s32_t resultn;
 
-   if (base->func.config_validate) {
-      resultn = base->func.config_validate(base->config);
+   if (base->handler.config_validate) {
+      resultn = base->handler.config_validate();
       if (resultn != OPIUM_RET_OK) {
          return OPIUM_RET_ERR;
       }
    }
 
-   return base->func.config_apply(base->config);
+   return base->handler.config_apply();
 }
 
    opium_s32_t
 opium_process_base_metric_collect(opium_process_base_t *base)
 {
-   if (!base->func.metric_collect) {
+   if (!base->handler.metric_collect) {
       return OPIUM_RET_ERR;
    }
 
-   return base->func.metric_collect(base->metric);
+   return base->handler.metric_collect();
 }
 
    void *
@@ -117,4 +105,10 @@ opium_process_base_get_config(opium_process_base_t *base)
 opium_process_base_get_metric(opium_process_base_t *base)
 {
    return base->metric;
+}
+
+   opium_process_base_handler_t * 
+opium_process_base_handler(opium_process_base_t *base)
+{
+   return &base->handler;
 }

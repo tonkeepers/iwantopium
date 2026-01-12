@@ -15,5 +15,5 @@ opium_process_init(opium_process_t self, char *name, void *data, opium_log_t *lo
 
    self.log  = log;
 
-
+   opium_entrails_init(&self.entrails, log);
 }

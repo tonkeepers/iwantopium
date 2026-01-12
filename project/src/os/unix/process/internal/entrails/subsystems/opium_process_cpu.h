@@ -10,14 +10,12 @@ typedef struct {
 } opium_process_cpu_config_t;
 
 typedef struct {
-   opium_u64_t user_ticks;
-   opium_u64_t system_ticks;
-   opium_u64_t total_ticks;
-   opium_u64_t usage_percent;
-   opium_u64_t last_update;
+   opium_u64_t utime;
+   opium_u64_t stime;
+   opium_u64_t cpu_ticks;
 } opium_process_cpu_metric_t;
 
-extern opium_process_base_func_t cpu_handler;
+extern opium_process_base_handler_t cpu_handler;
 
 void opium_process_cpu_set_affinity(opium_u64_t *mask, size_t n);
 void opium_process_cpu_set_policy(opium_s32_t policy);
