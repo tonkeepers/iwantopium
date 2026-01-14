@@ -50,8 +50,6 @@ struct opium_slab_s;
 struct opium_arena_s;
 struct opium_rbt_s;
 struct opium_cycle_s;
-struct opium_listening_s;
-struct opium_connection_s;
 
 typedef struct opium_log_s         opium_log_t;
 typedef struct opium_list_head_s   opium_list_head_t;
@@ -59,8 +57,6 @@ typedef struct opium_slab_s        opium_slab_t;
 typedef struct opium_arena_s       opium_arena_t;
 typedef struct opium_rbt_s         opium_rbt_t;
 typedef struct opium_cycle_s       opium_cycle_t;
-typedef struct opium_listening_s   opium_listening_t;
-typedef struct opium_connection_s  opium_connection_t;
 
 #include "opium_log.h"
 #include "opium_alloc.h"
@@ -74,9 +70,6 @@ typedef struct opium_connection_s  opium_connection_t;
 
 #define opium_min(a,b) ((a) < (b) ? (a) : (b))
 #define opium_max(a,b) ((a) > (b) ? (a) : (b))
-
-#define opium_likely(exp)   __builtin_expect(!!(exp), 1)
-#define opium_unlikely(exp) __builtin_expect(!!(exp), 0)
 
 #ifdef __cplusplus
 extern "C" {

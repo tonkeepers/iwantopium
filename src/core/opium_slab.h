@@ -8,7 +8,7 @@ typedef struct {
     void (*free_page)(void* ptr, size_t size, opium_log_t* log);
     void* (*alloc_aligned)(size_t align, size_t size, opium_log_t* log);
     void (*free_aligned)(void* ptr, opium_log_t* log);
-} opium_slab_ops;
+} opium_slab_ops_t;
 
 /* Define the "mask" for free/used slots depending on pointer size */
 #if (OPIUM_PTR_SIZE == 4) 
@@ -117,7 +117,7 @@ typedef void (*opium_slab_trav_ctx)(void *data);
 
 /* API */
 
-void opium_slab(opium_slab_ops *ops);
+void opium_slab(opium_slab_ops_t *ops);
 
 /* Lifecycle */
 int         opium_slab_init(opium_slab_t *slab, size_t item_size, opium_log_t *log);

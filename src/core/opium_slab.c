@@ -17,7 +17,7 @@
 
 #include "core/opium_core.h"
 
-static opium_slab_ops *mem_ops = NULL;
+static opium_slab_ops_t *mem_ops = NULL;
 
 /* Number of bits in a pointer (32-bit or 64-bit) */
 #define OPIUM_SLAB_BITS (OPIUM_PTR_SIZE * 8)
@@ -86,7 +86,7 @@ opium_slab_new_slot(opium_slab_t *slab, opium_slab_page_t *page)
 }
 
    void 
-opium_slab(opium_slab_ops *ops)
+opium_slab(opium_slab_ops_t *ops)
 {
    mem_ops = ops;
 }
@@ -234,9 +234,11 @@ opium_slab_exit(opium_slab_t *slab)
             opium_list_del(&current->head);
 
             if (slab->page_size <= OPIUM_SLAB_PAGE_SIZE) {
-               opium_munmap(current, slab->pages_per_alloc, slab->log);
+               //opium_munmap(current, slab->pages_per_alloc, slab->log);
+               mem_ops->free_page(current, slab->pages_per_alloc, slab->log);
             } else {
-               opium_free(current, slab->log);
+               //opium_free(current, slab->log);
+               mem_ops->free_aligned(current, slab->log);
             }
 
             current = NULL;

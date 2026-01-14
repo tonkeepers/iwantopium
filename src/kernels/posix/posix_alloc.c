@@ -23,6 +23,8 @@ pos1x_mmap(void *addr, opium_size_t len, opium_s32_t prot, opium_s32_t flags, op
       ptr = NULL;  
    }
 
+   opium_log_err(log, "Posix: mmap allocated(size: %zu)\n", len);
+
    return ptr;
 }
 
