@@ -3,24 +3,31 @@ CC      := gcc
 AR      := ar
 
 # Directories
-PROJECT_DIR  := $(abspath project)
+PROJECT_DIR  := .
 SRC_DIR      := $(PROJECT_DIR)/src
-CORE_DIR     := $(PROJECT_DIR)/src/core
-OS_DIR       := $(PROJECT_DIR)/src/os/unix
-INC_DIR      := $(PROJECT_DIR)/include
+CORE_DIR     := $(SRC_DIR)/core
+BRIDGE_DIR   := $(SRC_DIR)/bridge
+PLATFORM_DIR := $(SRC_DIR)/platform
+KERNELS_DIR  := $(SRC_DIR)/kernels
+SERVICES_DIR := $(SRC_DIR)/services
+
+# Build directories
 OBJ_DIR      := $(PROJECT_DIR)/build/obj
 BIN_DIR      := $(PROJECT_DIR)/build/bin
 LIB_DIR      := $(PROJECT_DIR)/build/lib
 
-# Find ALL C source files recursively
+# Find ALL C source files recursively from src/
 SRCS := $(shell find $(SRC_DIR) -type f -name '*.c')
 OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-# Flags
 CFLAGS  := -Wall -Wextra -O3 -fPIC -march=native -D_GNU_SOURCE \
            -I$(PROJECT_DIR) \
-           -I$(INC_DIR) \
            -I$(SRC_DIR) \
+           -I$(CORE_DIR) \
+           -I$(BRIDGE_DIR) \
+           -I$(PLATFORM_DIR) \
+           -I$(KERNELS_DIR) \
+           -I$(SERVICES_DIR) \
            -pthread \
            -Wno-unused-function \
            -Wno-unused-variable
@@ -29,7 +36,19 @@ CFLAGS  := -Wall -Wextra -O3 -fPIC -march=native -D_GNU_SOURCE \
 TARGET       := $(BIN_DIR)/opium
 TARGET_LIB   := $(LIB_DIR)/libopium.a
 
-.PHONY: all clean run debug test lib help tree bear
+# Kernel selection (default: posix for Linux)
+KERNEL ?= posix
+
+# Add kernel-specific flags
+ifeq ($(KERNEL),posix)
+    CFLAGS += -DKERNEL_POSIX -I$(KERNELS_DIR)/posix
+else ifeq ($(KERNEL),win)
+    CFLAGS += -DKERNEL_WIN -I$(KERNELS_DIR)/win
+else
+    $(error Unknown kernel: $(KERNEL). Use KERNEL=posix or KERNEL=win)
+endif
+
+.PHONY: all clean run debug test lib help tree sources objects kernel-posix kernel-win
 
 all: $(TARGET)
 
@@ -45,12 +64,19 @@ $(TARGET_LIB): $(OBJS)
 $(TARGET): $(OBJS)
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) $(OBJS) -lm -o $@
-	@echo "Executable built: $(TARGET)"
+	@echo "Executable built: $(TARGET) with kernel=$(KERNEL)"
 
-# Compile object files
+# Compile object files - ВАЖНО: все .c файлы компилируются сразу
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+# Kernel selection shortcuts
+kernel-posix:
+	$(MAKE) KERNEL=posix
+
+kernel-win:
+	$(MAKE) KERNEL=win
 
 # Commands
 run: all
@@ -86,16 +112,27 @@ objects:
 	@echo "Object files to build:"
 	@echo "$(OBJS)" | tr ' ' '\n'
 
+# Show include paths
+includes:
+	@echo "Include paths:"
+	@echo $(CFLAGS) | tr ' ' '\n' | grep -e '^-I'
+
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  all      - Build everything (default)"
-	@echo "  lib      - Build static library only"
-	@echo "  run      - Build and run the executable"
-	@echo "  debug    - Build with debug symbols"
-	@echo "  test     - Run tests"
-	@echo "  clean    - Remove build files"
-	@echo "  bear     - Generate compile_commands.json"
-	@echo "  tree     - Show project structure"
-	@echo "  sources  - List all found source files"
-	@echo "  objects  - List all object files"
+	@echo "  all          - Build everything (default)"
+	@echo "  lib          - Build static library only"
+	@echo "  kernel-posix - Build with POSIX kernel (default)"
+	@echo "  kernel-win   - Build with Windows kernel"
+	@echo "  run          - Build and run the executable"
+	@echo "  debug        - Build with debug symbols"
+	@echo "  test         - Run tests"
+	@echo "  clean        - Remove build files"
+	@echo "  bear         - Generate compile_commands.json"
+	@echo "  tree         - Show project structure"
+	@echo "  sources      - List all found source files"
+	@echo "  objects      - List all object files"
+	@echo "  includes     - Show include paths"
+	@echo ""
+	@echo "Environment variables:"
+	@echo "  KERNEL=posix|win  - Select kernel (default: posix)"

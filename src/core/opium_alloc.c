@@ -1,13 +1,3 @@
-/* @file opium_alloc.c
- * @brief Memory allocation wrappers for the Opium core library
- *
- * This module provides thin wrappers around standard C allocation
- * functions (malloc, calloc, free, posix_memalign), with integrated
- * logging support. It ensures that every memory operation can be 
- * tracked and debugged consistently.
- *
- */
-
 #include "core/opium_core.h"
 
    void *
@@ -41,5 +31,5 @@ opium_free(void *ptr, opium_log_t *log)
    if (!ptr) return;
    free(ptr);
    (void)log;
-   //opium_log_debug(log, "Pointer freed succesfully: %p, %zu\n", ptr, sizeof(ptr));
 }
+
